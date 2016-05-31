@@ -10,7 +10,7 @@
 % in original representation (CAR, POL, RAD)
 % * Only implemented for CAR, POL and RAD
 
-function [mMicrographVesiclesSubtracted, vesicleIdxRemoved, hFigBefore, hFigAfter] = removeVesiclesFromMicrograph(stVesicleModel, iPrincCompReg, iPrincCompRad, iPrincCompAng, mMicrograph, vVesicleCntX, vVesicleCntY, vVesicleR, bShowFigure, sTestMicText, bFigApplyGaussFilt)
+function removeVesiclesFromMicrograph(stVesicleModel, iPrincCompReg, iPrincCompRad, iPrincCompAng, mMicrograph, vVesicleCntX, vVesicleCntY, vVesicleR, bShowFigure, sTestMicText)
 
 
     iNrOfVesicles = length(vVesicleR);
@@ -29,69 +29,48 @@ function [mMicrographVesiclesSubtracted, vesicleIdxRemoved, hFigBefore, hFigAfte
     [Xabs, Yabs, mVesicleImWinStackInterp] = createVesInterpAbsoluteMeshGridsForMic('CAR', vVesicleCntX, vVesicleCntY, vVesicleR, stVesicleModel.stParameters, mMicrographBinaryVesicles);
     
     % For interpolating polar coordinates (iVesShapeInterpMethod == 3)
-    if stVesicleModel.stParameters.iVesShapeInterpMethod == 3 || stVesicleModel.stParameters.iVesShapeInterpMethod == 4
+    if stVesicleModel.stParameters.iVesShapeInterpMethod == 2
         [Rabs, Aabs, mVesicleImWinStackInterpPOL] = createVesInterpAbsoluteMeshGridsForMic('POL', vVesicleCntX, vVesicleCntY, vVesicleR, stVesicleModel.stParameters, mMicrographBinaryVesicles);
     end
     
-
-
     mMicrographVesiclesSubtracted = mMicrograph;
     vesicleIdxRemoved = zeros(iNrOfVesicles,1);
-
-    
-    showFigIdx = [6 7 27 35]; % TIP paper
 
     for vesIdx = 1:iNrOfVesicles
 
         % Correction of X and Y values to boxed image: Center
         % coordinates should be aligned
         
-        %[mImagePixelsInMicrograph, mXvesIm, mYvesIm, mImagePixelsVesicleWin, mImagePixelsBGWin, iImCropSize, mImBoxXcrop, mImBoxYcrop, mImagePixelsVesicleHardWin] = getStackImagePixelsInMicrograph(mMicrographVesiclesSubtracted, Xabs(:, :, vesIdx), Yabs(:, :, vesIdx), 1, vVesicleR(vesIdx), dBeta, stVesicleModel.stParameters.dAlpha, mMicrographBinaryVesicles, 1, 1, dMaxRR, dMaxRfac, vVesicleCntX(vesIdx), vVesicleCntY(vesIdx));
         [mImagePixelsInMicrograph, mXvesIm, mYvesIm, mImagePixelsVesicleWin, mImagePixelsBGWin, vImagePixelsCropInfo, mVesXrelR, mVesYrelA, mImagePixelsVesicleHardWin] = getStackImagePixelsInMicrograph(mMicrographVesiclesSubtracted, Xabs(:, :, vesIdx), Yabs(:, :, vesIdx), 1, vVesicleR(vesIdx), stVesicleModel.stParameters.dBeta, stVesicleModel.stParameters.dAlpha, mMicrographBinaryVesicles, 1, 1, stVesicleModel.stParameters.dMaxRR, vVesicleCntX(vesIdx), vVesicleCntY(vesIdx), stVesicleModel.stParameters.iVesShapeInterpMethod, stVesicleModel.stParameters.dWallThickness);
-        
-        
-        % Before normalization, the following two images should be
-        % completely equal:
-        % im1 = mMicrographVesiclesSubtracted(mImBoxYcrop(1):mImBoxYcrop(2), mImBoxXcrop(1):mImBoxXcrop(2));
-        % im2 = crop(mImagePixelsInMicrograph, iImCropSize);
-
         
         if isValidVesicleImage(mImagePixelsInMicrograph) && isValidVesicleBGImage(mImagePixelsBGWin) 
 
-            
-                % Normalize raw image without windowing                
-                
 
-                    [mImagePixelsInMicrographNorm, dImageMean, dStd] = normalizeVesicleImage(mImagePixelsInMicrograph, mImagePixelsVesicleWin, mImagePixelsBGWin, 0);
+            [mImagePixelsInMicrographNorm, dImageMean, dStd] = normalizeVesicleImage(mImagePixelsInMicrograph, mImagePixelsVesicleWin, mImagePixelsBGWin, 0);
 
-
-                mImNormInterp = interpolateImagePixels(mImagePixelsInMicrographNorm, mXvesIm, mYvesIm);
+            mImNormInterp = interpolateImagePixels(mImagePixelsInMicrographNorm, mXvesIm, mYvesIm);
             
             mImNormInterp(isnan(mImNormInterp(:)))=0;
             
             mImNormInterpPOLWindowed = [];
-            if stVesicleModel.stParameters.iVesShapeInterpMethod == 3 || stVesicleModel.stParameters.iVesShapeInterpMethod == 4
+            if stVesicleModel.stParameters.iVesShapeInterpMethod == 2
                 mImNormInterpPOL = interpolateImagePixels(mMicrographVesiclesSubtracted, Rabs(:, :, vesIdx), Aabs(:, :, vesIdx));
                 mImNormInterpPOLWindowed = mImNormInterpPOL.*mVesicleImWinStackInterpPOL(:,:,vesIdx);
 
             end
 
-            if bShowFigure && sum(ismember(showFigIdx, vesIdx))
-                bShowFig = 1;
-            else
-                bShowFig = 0;
-            end
 
-            % Crop function used (which crop):
-            % /Users/katrine/Documents/Cryo-EM/Development/MatLab/Membrane/Fred/aEMCodeRepository-master/aLibs/EMBase/Crop.m
-            %if isValidVesicleBGImage(Crop(mImagePixelsBGWin, iImCropSize))
             if isValidVesicleBGImage(mImagePixelsBGWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)))
             
-                if vesIdx == 2 || vesIdx == 6 || vesIdx == 7 || vesIdx == 35
-                    p = 1;
-                end
+
                 
-                [mImBoxSub, h] = removeVesicleFromImage(stVesicleModel, iPrincCompReg,mImagePixelsInMicrograph(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleHardWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsBGWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsInMicrographNorm(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImNormInterp, mVesicleImWinStackInterp(:,:,vesIdx), mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, vVesicleR(vesIdx), dImageMean, dStd, bShowFig);
+                mImBoxSub = removeVesicleFromImage(stVesicleModel, iPrincCompReg,mImagePixelsInMicrograph(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleHardWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsBGWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsInMicrographNorm(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImNormInterp, mVesicleImWinStackInterp(:,:,vesIdx), mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, vVesicleR(vesIdx), dImageMean, dStd);
+                
+                if bShowFigure && sum(ismember(stVesicleModel.stParameters.showFigIdx, vesIdx)) 
+        
+                    fprintf( 'std %d \n', std(mImBoxSub(:))); % TODO remove
+                
+                end
                 
                 
                 if isValidVesicleImage(mImBoxSub)
@@ -101,21 +80,6 @@ function [mMicrographVesiclesSubtracted, vesicleIdxRemoved, hFigBefore, hFigAfte
                     vesicleIdxRemoved(vesIdx) = 1;
 
                     
-
-                    if bShowFig
-
-                        % overall figure title
-                        ax=axes('Units','Normal','Position',[.075 .075 .85 .87],'Visible','off');
-                        set(get(ax,'Title'),'Visible','on')
-                        title(char(stVesicleModel.sName, 'Vesicle subtraction data'));
-
-                        if stVesicleModel.stParameters.bSaveData
-                            saveAsKeepSize(h, strcat(stVesicleModel.stParameters.sSaveToDir, stVesicleModel.sName, '-PC-', num2str(iPrincCompReg), '-subtract-data2-idx-', num2str(vesIdx), '-mic-', sTestMicText, strcat('.pdf')));
-                        end
-                        close(h);
-                        
-                    end
-
                 end
             end
 
@@ -124,53 +88,9 @@ function [mMicrographVesiclesSubtracted, vesicleIdxRemoved, hFigBefore, hFigAfte
     end
     
     clear mMicrographBinaryVesicles;
-    
-    if 1%bShowFigure
-        % show the micrograph after vesicle subtraction
-        h = figure;
-        stdFigSize = get(h, 'Position'); close(h);
-        hFigBefore = figure('Position',[stdFigSize(1),stdFigSize(2),stdFigSize(3)+70,stdFigSize(3)]); 
-        if bFigApplyGaussFilt
-            imagesc(GaussFilt(mMicrograph, 0.1)); colormap gray; axis xy; hold on;
-        else
-            imagesc(mMicrograph); colormap gray; axis xy; hold on;
-        end
-        for vesicleIdx=1:iNrOfVesicles
-            if vesicleIdxRemoved(vesicleIdx)
-                plot(vVesicleCntX(vesicleIdx),vVesicleCntY(vesicleIdx),'b.');
-            else
-                plot(vVesicleCntX(vesicleIdx),vVesicleCntY(vesicleIdx),'r.');
-            end
-        end
-        title(char(stVesicleModel.sName, 'Micrograph before vesicle subtraction, gauss filtered'));
-    
-%         if saveData
-%             saveAsKeepSize(h, strcat(stVesicleModel.stParameters.sSaveToDir, stVesicleModel.sName, '-before-vesicle-subtraction-', strcat('.pdf')));
-%         end
         
-        
-        hFigAfter = figure('Position',[stdFigSize(1),stdFigSize(2),stdFigSize(3)+70,stdFigSize(3)]); 
-        if bFigApplyGaussFilt
-            imagesc(GaussFilt(mMicrographVesiclesSubtracted, 0.1)); colormap gray; axis xy; hold on;
-        else
-            imagesc(mMicrographVesiclesSubtracted); colormap gray; axis xy; hold on;
-        end
-        for vesicleIdx=1:iNrOfVesicles
-            if vesicleIdxRemoved(vesicleIdx)
-                plot(vVesicleCntX(vesicleIdx),vVesicleCntY(vesicleIdx),'b.');
-            else
-                plot(vVesicleCntX(vesicleIdx),vVesicleCntY(vesicleIdx),'r.');
-            end
-        end
-        title(char(stVesicleModel.sName, 'Micrograph after vesicle subtraction, gauss filtered'));
-
-%         if saveData
-%             saveAsKeepSize(h, strcat(stVesicleModel.stParameters.sSaveToDir, stVesicleModel.sName, '-after-vesicle-subtraction-', strcat('.pdf')));
-%         end
-    end
-    
     if stVesicleModel.stParameters.bSaveData
         % Save vesicle subtracted micrograph
-        saveVesicleSubtractedMicrograph(stVesicleModel.stParameters.sSaveToDir, mMicrographVesiclesSubtracted, strcat(stVesicleModel.sName, '-mic-', sTestMicText), vVesicleCntX, vVesicleCntY, vVesicleR, vesicleIdxRemoved, stVesicleModel.sName, iPrincCompReg, iPrincCompRad, iPrincCompAng);
+        saveVesicleSubtractedMicrograph(stVesicleModel, mMicrograph, mMicrographVesiclesSubtracted, strcat(stVesicleModel.sName, '-mic-', sTestMicText), vVesicleCntX, vVesicleCntY, vVesicleR, vesicleIdxRemoved, iPrincCompReg, iPrincCompRad, iPrincCompAng, sTestMicText);
     end
 end

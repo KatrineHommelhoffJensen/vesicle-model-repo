@@ -37,7 +37,7 @@ function [mDim1, mDim2, mDimIdx, mDim1Coord2, mDim2Coord2] = createVesInterpRela
         % mDim2Coord2:  YrelA
   
         
-    elseif strcmp(sProfileType, 'RAD') || strcmp(sProfileType, 'POL')
+    elseif strcmp(sProfileType, 'POL')
         
         % Polar coordinates
         if nargin > 3

@@ -1,4 +1,5 @@
-% Creates a micrograph with 1's in pixels belonging to a vesicle, 0's otherwise. 
+%CREATEBINARYVESICLEMICROGRAPH Function that Creates a micrograph with 1's
+%in pixels belonging to a vesicle, 0's otherwise.  
 
 function [mBinaryVesicleMicrograph] = createBinaryVesicleMicrograph(iMicDim, dVesicleCntX, dVesicleCntY, dVesicleR, dBeta)
  

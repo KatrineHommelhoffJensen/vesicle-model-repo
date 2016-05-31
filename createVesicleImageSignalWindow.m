@@ -1,12 +1,5 @@
-
-% From the image size and relative radius, the function creates a Tukey
-% window image
-
-% ptVesicleCnt: Double precision center of vesicle in image
-% dVesicleRadius: Double precision radius of vesicle in image
-
-% Hard window: Radius = dBeta*dVesicleRadius
-% Soft window: Radius = dBeta*dVesicleRadius + (1/dAlpha)
+%CREATEVESICLEIMAGESIGNALWINDOW Function that creates a window for a
+%vesicle image: Either hard or soft, i.e. Tukey.
 
 function [mWin] = createVesicleImageSignalWindow(sVesicleImSize, dVesicleRadius, ptVesicleCnt, dBeta, dAlpha, bSoftWindow)
 

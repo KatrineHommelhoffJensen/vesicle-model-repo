@@ -1,4 +1,6 @@
-function [mImageClean] = cleanVesicleImage(mImage)
+%CLEANVESICLEIMAGE Function that cleans an (vesicle) image for Inf and NaN's.
+
+function mImageClean = cleanVesicleImage(mImage)
     
     % Removes Inf and NaN
     
@@ -26,7 +28,5 @@ function [mImageClean] = cleanVesicleImage(mImage)
         end
     end
     
-    
     mImageClean(isnan(mImageClean(:))) = 0;
-    
 end

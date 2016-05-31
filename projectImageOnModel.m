@@ -54,7 +54,7 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
         end
     end
     
-    if stVesicleModel.stParameters.iVesShapeInterpMethod == 3 || stVesicleModel.stParameters.iVesShapeInterpMethod == 4
+    if stVesicleModel.stParameters.iVesShapeInterpMethod == 2
         
         % New strategy: Rotationally align model to vesicle image:
         % 1) Get intensity and shape normalized vesicle image in the
@@ -64,44 +64,20 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
         % coordinates
         % 4) resizeInterpolateVesicleImage modified model mean and
         % components in the cartesian coordinates
+             
+        mImTrainMeanShiftAligned = stVesicleModel.mImHOSVDmeanTrainSetPOL;
+        mImHOSVDmeanPOLShiftedToVesIm = stVesicleModel.mImHOSVDmeanPOL;
+
+        vShifts = circshiftAlignVesicleImage(mImTrainMeanShiftAligned, mVesImageInterpPOLWindowed, stVesicleModel.stParameters.iMaxShiftFrequencies, stVesicleModel.stParameters.iMaxShiftAmplitude, stVesicleModel.stParameters.dMaxR - stVesicleModel.stParameters.dWallThickness/2,1);
         
-        
-        
-        if stVesicleModel.stParameters.iVesShapeInterpMethod == 3
-        
-            % Notice: align with training set sample, apply on second order
-            % model mean
-            [iRowIdxFinal, mImTrainMeanShiftAligned] = circshiftAlignVesicleImage(stVesicleModel.mImHOSVDmeanTrainSetPOL, mVesImageInterpPOLWindowed);
-            mImHOSVDmeanPOLShiftedToVesIm = circshift(stVesicleModel.mImHOSVDmeanPOL, iRowIdxFinal);
-        
-        else % stVesicleModel.stParameters.iVesShapeInterpMethod == 4
+        dRadiusInner = round(stVesicleModel.stParameters.dMaxR - stVesicleModel.stParameters.dWallThickness/2);
+        [radius, angle]=meshgrid(1:size(mImHOSVDmeanPOLShiftedToVesIm,2),1:size(mImHOSVDmeanPOLShiftedToVesIm,1));
+        mImHOSVDmeanPOLShiftedToVesIm = sinusoidShiftVesicleImage(double(mImHOSVDmeanPOLShiftedToVesIm), radius, angle, round(dRadiusInner), vShifts);
+        mImHOSVDmeanPOLShiftedToVesIm = mImHOSVDmeanPOLShiftedToVesIm.*stVesicleModel.mImModelWinPOL;
             
-            mImTrainMeanShiftAligned = stVesicleModel.mImHOSVDmeanTrainSetPOL;
-            mImHOSVDmeanPOLShiftedToVesIm = stVesicleModel.mImHOSVDmeanPOL;
-            
-            % Notice: align with training set sample, apply on second order
-            % model mean
-            
-            %if stVesicleModel.stParameters.iShiftMethod > 2
-            %    error('iShiftMethod not implemented!');
-            %    %TODO: check that shift input is not windowed!
-            %end
-            
-            vShifts = circshiftAlignVesicleImage(mImTrainMeanShiftAligned, mVesImageInterpPOLWindowed, 1, stVesicleModel.mImModelWinPOL, stVesicleModel.stParameters.iMaxShiftFrequencies, stVesicleModel.stParameters.iMaxShiftAmplitude, stVesicleModel.stParameters.iShiftMethod, stVesicleModel.stParameters.dMaxR - stVesicleModel.stParameters.dWallThickness/2,1);
-            
-%             for iRowIdx = 1:size(mImTrainMeanShiftAligned,1)
-%                 mImHOSVDmeanPOLShiftedToVesIm(iRowIdx,:) = circshift(mImHOSVDmeanPOLShiftedToVesIm(iRowIdx,:), [0,vShifts(iRowIdx)]);
-%                 mImHOSVDmeanPOLShiftedToVesIm = mImHOSVDmeanPOLShiftedToVesIm.*stVesicleModel.mImModelWinPOL;
-%             end
-            dRadiusInner = round(stVesicleModel.stParameters.dMaxR - stVesicleModel.stParameters.dWallThickness/2);
-            [radius, angle]=meshgrid(1:size(mImHOSVDmeanPOLShiftedToVesIm,2),1:size(mImHOSVDmeanPOLShiftedToVesIm,1));
-            mImHOSVDmeanPOLShiftedToVesIm = sinusoidShiftVesicleImage(double(mImHOSVDmeanPOLShiftedToVesIm), radius, angle, round(dRadiusInner), vShifts, size(vShifts, 1));%stVesicleModel.stParameters.iMaxShiftFrequencies);
-            mImHOSVDmeanPOLShiftedToVesIm = mImHOSVDmeanPOLShiftedToVesIm.*stVesicleModel.mImModelWinPOL;
-            
-        end
         
         % back to cartesian
-        mImHOSVDmeanCARShiftedToVesIm = interpolateVesicleImagePOLtoCAR(mImHOSVDmeanPOLShiftedToVesIm, stVesicleModel.stParameters.dMaxR, stVesicleModel.stParameters.dMaxRR, stVesicleModel.dMaxRadiusFac);
+        mImHOSVDmeanCARShiftedToVesIm = interpolateVesicleImagePOLtoCAR(mImHOSVDmeanPOLShiftedToVesIm, stVesicleModel.stParameters.dMaxR, stVesicleModel.stParameters.dMaxRR);
         if bResizeModel
             mImHOSVDmeanCARShiftedToVesIm = resizeInterpolateVesicleImage(stVesicleModel.stParameters.iVesShapeInterpMethod, stVesicleModel.stParameters.dWallThickness, mImHOSVDmeanCARShiftedToVesIm, stVesicleModel.stParameters.dMaxR, size(mImHOSVDmeanCARShiftedToVesIm, 1)/2 + 1, size(mImHOSVDmeanCARShiftedToVesIm, 2)/2 + 1, mVesXrelR, mVesYrelA, dVesRadius);
         end
@@ -110,22 +86,11 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
         if iPrincCompReg > 0
             for j=1:iPrincCompReg
                 mImComponentCARShiftedToVesIm = stVesicleModel.mComponentsPOL(:,:,j);
-                
-                if stVesicleModel.stParameters.iVesShapeInterpMethod == 3
-                
-                    mImComponentCARShiftedToVesIm = circshift(mImComponentCARShiftedToVesIm, iRowIdxFinal);
-                    
-                else % stVesicleModel.stParameters.iVesShapeInterpMethod == 4
-%                     for iRowIdx = 1:size(mImTrainMeanShiftAligned,1)
-%                         mImComponentCARShiftedToVesIm(iRowIdx,:) = circshift(mImComponentCARShiftedToVesIm(iRowIdx,:), [0,vShifts(iRowIdx)]);
-%                     end
-                    
-                    [radius, angle]=meshgrid(1:size(mImComponentCARShiftedToVesIm,2),1:size(mImComponentCARShiftedToVesIm,1));
-                    mImComponentCARShiftedToVesIm = sinusoidShiftVesicleImage(double(mImComponentCARShiftedToVesIm), radius, angle, round(dRadiusInner), vShifts, size(vShifts, 1));% stVesicleModel.stParameters.iMaxShiftFrequencies);
-                end
-                
+                [radius, angle]=meshgrid(1:size(mImComponentCARShiftedToVesIm,2),1:size(mImComponentCARShiftedToVesIm,1));
+                mImComponentCARShiftedToVesIm = sinusoidShiftVesicleImage(double(mImComponentCARShiftedToVesIm), radius, angle, round(dRadiusInner), vShifts);
+
                 % back to cartesian
-                mImComponentCARShiftedToVesIm = interpolateVesicleImagePOLtoCAR(mImComponentCARShiftedToVesIm, stVesicleModel.stParameters.dMaxR, stVesicleModel.stParameters.dMaxRR, stVesicleModel.dMaxRadiusFac);
+                mImComponentCARShiftedToVesIm = interpolateVesicleImagePOLtoCAR(mImComponentCARShiftedToVesIm, stVesicleModel.stParameters.dMaxR, stVesicleModel.stParameters.dMaxRR);
 
                 if bResizeModel
                     mImComponentCARShiftedToVesIm = resizeInterpolateVesicleImage(stVesicleModel.stParameters.iVesShapeInterpMethod, stVesicleModel.stParameters.dWallThickness, mImComponentCARShiftedToVesIm, stVesicleModel.stParameters.dMaxR, size(mImComponentCARShiftedToVesIm, 1)/2 + 1, size(mImComponentCARShiftedToVesIm, 2)/2 + 1, mVesXrelR, mVesYrelA, dVesRadius);
@@ -184,7 +149,6 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
                 % Intensity normalized values, visualized with reverse normalized,
                 % signal merged images
                 mImBoxSubLevels(:,:,j+1) = (reverseNormalizeVesicleImage(mVesImage, dImageMean, dStd).*mImWin) +  (mImBox.*mImBGWin);
-                %mImBoxSubLevels(:,:,j) = mImage;
             end
         end
     end

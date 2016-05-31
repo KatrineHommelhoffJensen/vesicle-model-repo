@@ -1,42 +1,51 @@
+%BUILDVESICLEMODEL Function that builds and returns a hierarchical HOSVD
+%vesicle model given model parameters and vesicle image training set.
+%
+%   Parameters include:
+%
+%   'stParameters'          Model parameters created in 'getParameters.m'
+%
+%   'mVesicleTrainingSet'   Stack of vesicle training images 
+%
+%   'mVesicleTrainingSetWin'    Stack of vesicle windows for training set
+
 function stVesicleModel = buildVesicleModel(stParameters, mVesicleTrainingSet, mVesicleTrainingSetWin)
 
-% ====================================================================
-% Align training vesicles and calculate mean
-% ====================================================================
+    % ====================================================================
+    % Align training vesicles and calculate mean
+    % ====================================================================
 
-[meanImg, mVesicleTrainingSet2] = calculateMeanPolVesicleImage(stParameters, mVesicleTrainingSet, mVesicleTrainingSetWin);
+    [meanImg, mVesicleTrainingSet2] = calculateMeanPolVesicleImage(stParameters, mVesicleTrainingSet, mVesicleTrainingSetWin);
 
-if ~isempty(mVesicleTrainingSet2)
-    mVesicleTrainingSet = mVesicleTrainingSet2;
-    clear mVesicleTrainingSet2
-else
-    mVesicleTrainingSet = mVesicleTrainingSet.*mVesicleTrainingSetWin;
-end
-% At this point all polar coordinate vesicle images should be windowed!
-
-mVesicleTrainingSet_meanSubtracted = mVesicleTrainingSet - meanImg(:,:,ones(size(mVesicleTrainingSet, 3),1)); 
-
-
-% ====================================================================
-% Build vesicle model
-% ====================================================================
-
-% A1, UPhi: Angular variance
-A1 = zeros(size(mVesicleTrainingSet_meanSubtracted, 1),size(mVesicleTrainingSet_meanSubtracted, 2)*size(mVesicleTrainingSet_meanSubtracted, 3));
-A1(:) = mVesicleTrainingSet_meanSubtracted(:);
-cov1 = 1/(size(mVesicleTrainingSet_meanSubtracted, 2)*size(mVesicleTrainingSet_meanSubtracted, 3))*(A1*A1');
-% A2, URho: Radial varience
-A2 = zeros(size(mVesicleTrainingSet_meanSubtracted,2),size(mVesicleTrainingSet_meanSubtracted,1)*size(mVesicleTrainingSet_meanSubtracted,3));
-imgStack2= permute(mVesicleTrainingSet_meanSubtracted,[2 1 3]);
-A2(:) = imgStack2(:);
-cov2 = 1/(size(mVesicleTrainingSet_meanSubtracted, 1)*size(mVesicleTrainingSet_meanSubtracted, 3))*(A2*A2');
-
-% Select number basis functions to build combined model from
-[UPhi,s]=eigs(cov1,stParameters.iPrincCompAng); % Ang
-[URho,s]=eigs(cov2,stParameters.iPrincCompRad); % Rad
+    if ~isempty(mVesicleTrainingSet2)
+        mVesicleTrainingSet = mVesicleTrainingSet2;
+        clear mVesicleTrainingSet2
+    else
+        mVesicleTrainingSet = mVesicleTrainingSet.*mVesicleTrainingSetWin;
+    end
+    
+    mVesicleTrainingSet_meanSubtracted = mVesicleTrainingSet - meanImg(:,:,ones(size(mVesicleTrainingSet, 3),1)); 
 
 
-    basis=zeros(size(meanImg,1),size(meanImg,2),stParameters.iPrincCompAng, stParameters.iPrincCompRad);%iPrincCompAng_hosvd_basis,iPrincCompRad_hosvd_basis);
+    % ====================================================================
+    % Build vesicle model
+    % ====================================================================
+
+    % A1, UPhi: Angular variance
+    A1 = zeros(size(mVesicleTrainingSet_meanSubtracted, 1),size(mVesicleTrainingSet_meanSubtracted, 2)*size(mVesicleTrainingSet_meanSubtracted, 3));
+    A1(:) = mVesicleTrainingSet_meanSubtracted(:);
+    cov1 = 1/(size(mVesicleTrainingSet_meanSubtracted, 2)*size(mVesicleTrainingSet_meanSubtracted, 3))*(A1*A1');
+    % A2, URho: Radial varience
+    A2 = zeros(size(mVesicleTrainingSet_meanSubtracted,2),size(mVesicleTrainingSet_meanSubtracted,1)*size(mVesicleTrainingSet_meanSubtracted,3));
+    imgStack2= permute(mVesicleTrainingSet_meanSubtracted,[2 1 3]);
+    A2(:) = imgStack2(:);
+    cov2 = 1/(size(mVesicleTrainingSet_meanSubtracted, 1)*size(mVesicleTrainingSet_meanSubtracted, 3))*(A2*A2');
+
+    % Select number basis functions to build combined model from
+    [UPhi,s]=eigs(cov1,stParameters.iPrincCompAng); % Ang
+    [URho,s]=eigs(cov2,stParameters.iPrincCompRad); % Rad
+
+    basis = zeros(size(meanImg,1),size(meanImg,2),stParameters.iPrincCompAng, stParameters.iPrincCompRad);%iPrincCompAng_hosvd_basis,iPrincCompRad_hosvd_basis);
     
     for i=1:stParameters.iPrincCompAng
         for j=1:stParameters.iPrincCompRad
@@ -45,13 +54,12 @@ cov2 = 1/(size(mVesicleTrainingSet_meanSubtracted, 1)*size(mVesicleTrainingSet_m
         end
     end
 
-    
-%     %Basis vectors as columns
-%     % All combinations af basis vectors (rad, ang)
+    % Basis vectors as columns
+    % All combinations af basis vectors (rad, ang)
     C = zeros(stParameters.iPrincCompAng*stParameters.iPrincCompRad, stParameters.iPrincCompAng*stParameters.iPrincCompRad);
     xi = zeros(stParameters.iPrincCompAng*stParameters.iPrincCompRad, size(mVesicleTrainingSet_meanSubtracted, 3));
     
-    %Basis vectors as columns
+    % Basis vectors as columns
     % All combinations af basis vectors (rad, ang)
     bimg = reshape(basis(:,:,1:stParameters.iPrincCompAng,1:stParameters.iPrincCompRad), size(basis,1)*size(basis,2), stParameters.iPrincCompAng*stParameters.iPrincCompRad);
     
@@ -75,7 +83,6 @@ cov2 = 1/(size(mVesicleTrainingSet_meanSubtracted, 1)*size(mVesicleTrainingSet_m
     % 1) mean of first PCA (in polar coordinates)
     % 2) mean of second PCA (in polar coordinates)
     mImHOSVDmeanTrainSetPOL = meanImg;
-    %mImHOSVDmeanTrainSetCAR = interpolateVesicleImagePOLtoCAR(mImHOSVDmeanTrainSetPOL, stParameters.dMaxR, stParameters.dMaxRR);
     mImHOSVDmeanPOL = cleanVesicleImage(meanImg + meanPhiRho);    
     mImHOSVDmeanCAR = interpolateVesicleImagePOLtoCAR(mImHOSVDmeanPOL, stParameters.dMaxR, stParameters.dMaxRR);
     

@@ -13,10 +13,6 @@ function [mImInterpStack] = interpolateImagePixels(mImOrig, mInterpX, mInterpY)
     mImInterpStack = interp2(mImOrig, mInterpX, mInterpY, 'bicubic'); 
     mImInterpStack(isnan(mImInterpStack(:))) = 0;
     
-    % TEST visualise
-%     figure;hold on;
-%     for i=1:10
-%         subplot(1,10,i); imshow(stack(:,:,i),[]);
-%     end
+
 
 end    

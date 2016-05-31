@@ -75,8 +75,6 @@ function [Xabs, Yabs, mVesicleImWinStackInterp, mVesicleImBGWinStackInterp, Rabs
         Rabs = reshape(Rabs, size(IDX));
         
         mVesicleImWinStackInterp = reshape((stParameters.dBeta.*vVesicleR(IDX(:))>Rrel(:).*vVesicleR(IDX(:)))+(stParameters.dBeta.*vVesicleR(IDX(:))<=Rrel(:).*vVesicleR(IDX(:)) & -stParameters.dBeta.*vVesicleR(IDX(:))+Rrel(:).*vVesicleR(IDX(:))<1/stParameters.dAlpha).*(0.5*(cos(2*pi*(0.5*stParameters.dAlpha)*(Rrel(:).*vVesicleR(IDX(:))-stParameters.dBeta.*vVesicleR(IDX(:))))+1)),size(IDX)); 
-        
-         
     
     else
         error('Unknown vesicle profile type');
