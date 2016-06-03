@@ -1,7 +1,5 @@
-% Normalizes a vesicle image according to a method specified by iVesImNormMethod
-
-% Notice: the binary images should be hard (not soft windowed)!
-
+% NORMALIZEVESICLEIMAGE Normalizes a vesicle image according to a method
+% specified by iVesImNormMethod 
 % Output:
 % mImageNorm: The normalized image
 % dImageMean: The mean or median, that has been subtracted

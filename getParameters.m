@@ -77,8 +77,7 @@ function stParameters = getParameters()
 
         stParameters.sModelNamePrefix = 'TIP2';
         
-        % TODO remove!
-        stParameters.showFigIdx = [6 7 27 35];
+        %stParameters.showFigIdx = [6 7 27 35];
         
     else % iPaperIdx == 2
         % ====================================================================
@@ -136,8 +135,7 @@ function stParameters = getParameters()
 
         stParameters.sModelNamePrefix = 'JSB2';
         
-        % TODO remove!
-        stParameters.showFigIdx = [2 8];
+        %stParameters.showFigIdx = [2 8];
     
     end
 end

@@ -1,7 +1,6 @@
-% Creates an image with 1's in pixels belonging to a vesicle, 0's otherwise.
-% Defines which pixels belong to a vesicle, given its floating point
-% center and radius in the image.
-% A pixel belongs to the vesicle if the center point is within radius.
+% GETVESICLEPIXELSINIMAGE Creates an image with 1's in pixels belonging to
+% a vesicle, 0's otherwise. Defines which pixels belong to a vesicle, given
+% its floating point center and radius in the image.
 
 function [mBinaryVesicleImage] = getVesiclePixelsInImage(iImDim, dVesicleCntX, dVesicleCntY, dVesicleR)
  

@@ -1,4 +1,5 @@
-% Undos vesicle image normalization according to a method specified by iVesImNormMethod
+% REVERSENORMALIZEVESICLEIMAGE Undos vesicle image normalization according
+% to a method specified by iVesImNormMethod 
 
 function [mImage] = reverseNormalizeVesicleImage(mImageNorm, dImageMean, dStd)
  

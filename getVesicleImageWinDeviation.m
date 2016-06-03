@@ -1,10 +1,5 @@
-% Returns the deviation of the image inside the window
-
-% mImage: image to be investigated
-% iVesImNormMethod: normalization method
-% mImageWindow: inside which the image values should be inspected
-% mImageBGWindow: background values (could be equal to mImageWindow)
-
+%GETVESICLEIMAGEWINDEVIATION Fnction that calculates the Median Absolute
+%Deviation in a vesicle image, area specified by a window 
 
 function [dDev, dBGMean] = getVesicleImageWinDeviation(mImage, mImageWindow, mImageBGWindow)
     

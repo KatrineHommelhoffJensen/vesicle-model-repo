@@ -1,11 +1,12 @@
-
+%GETVESICLEIMAGESTACKFROMMICROGRAPH Function that extracts and interpolates
+%vesicle image pixels from the micrograph, given a set of vesicle center
+%positions and radii
 
 
 function [mVesicleImStack, mVesicleImWinStackInterp] = getVesicleImageStackFromMicrograph(mMicrograph, vVesicleCntX, vVesicleCntY, vVesicleR, stParameters, mMicrographBinaryVesicles)
 
     iNrOfVesicles = length(vVesicleR);   
         
-    %RETURNS POL COORD
         
     [Xabs, Yabs, mVesicleImWinStackInterpTmp, mVesicleImBGWinStackInterpTmp, Rabs] = createVesInterpAbsoluteMeshGridsForMic('POL', vVesicleCntX, vVesicleCntY, vVesicleR, stParameters, mMicrographBinaryVesicles);
 
@@ -13,9 +14,6 @@ function [mVesicleImStack, mVesicleImWinStackInterp] = getVesicleImageStackFromM
     mVesicleImStackTmp = zeros(size(mVesicleImWinStackInterpTmp,1)*size(mVesicleImWinStackInterpTmp,2), iNrOfVesicles);
     iNewNrOfVesicles = 0;
     for vesIdx = 1:iNrOfVesicles
-
-        % Correction of X and Y values to boxed image: Center
-        % coordinates should be aligned
 
         Xtmp = Xabs(:, :, vesIdx);
         Ytmp = Yabs(:, :, vesIdx);
@@ -25,7 +23,6 @@ function [mVesicleImStack, mVesicleImWinStackInterp] = getVesicleImageStackFromM
 
             mImagePixelsInMicrograph = normalizeVesicleImage(mImagePixelsInMicrograph, mImagePixelsVesicleWin, mImagePixelsBGWin, 0);
             Rabstmp = Rabs(:,:,vesIdx);
-            %winIterp = mVesicleImWinStackInterpTmp(:,:,vesIdx);
             im = 1/sqrt(2*pi)*sqrt(Rabstmp(:)).*interpolateImagePixels(mImagePixelsInMicrograph, mXvesIm, mYvesIm);%.*winIterp(:);
             im(isnan(im(:)))=0;
             mVesicleImStackTmp(:,vesIdx) = im;
@@ -54,7 +51,6 @@ function [mVesicleImStack, mVesicleImWinStackInterp] = getVesicleImageStackFromM
         end
     end
 
-    %iNrOfVesicles = iNewNrOfVesicles;
     clear iNewNrOfVesicles;
     clear mVesicleImStackTmp;
     clear mVesicleImWinStackInterpTmp;

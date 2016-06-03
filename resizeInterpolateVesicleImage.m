@@ -1,6 +1,6 @@
-
-% Resizes vesicle image while respecting interpolation rules tied to the 
-% shape interpolation method iVesShapeInterpMethod  
+% RESIZEINTERPOLATEVESICLEIMAGE Resizes vesicle image while respecting
+% interpolation rules tied to the shape interpolation method
+% iVesShapeInterpMethod   
 
 function [mImInterp] = resizeInterpolateVesicleImage(iVesShapeInterpMethod, dWallThickness, mImOrig, dOrigR, dOrigCntX, dOrigCntY, mVesXrelR, mVesYrelA, dInterpR)
 

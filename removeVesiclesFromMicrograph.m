@@ -1,32 +1,15 @@
 
-% We assume the micrograph is already median subtracted
-
-% The micrograph has to be read according to the model type
-
-% Modifications since last version:
-% * Only subtract directly from micrograph (not stack)
-% * New normalization (normalize, interp, window)
-% * New subtraction procedure (subtractVesicleFromImage2) with subtraction
-% in original representation (CAR, POL, RAD)
-% * Only implemented for CAR, POL and RAD
-
 function removeVesiclesFromMicrograph(stVesicleModel, iPrincCompReg, iPrincCompRad, iPrincCompAng, mMicrograph, vVesicleCntX, vVesicleCntY, vVesicleR, bShowFigure, sTestMicText)
 
 
     iNrOfVesicles = length(vVesicleR);
-    
-    % CAR vs POL: 
-    % Notice that the micrograph is always interpolated in cartesian
-    % coordinates. The only difference is, the basis in polar coordinates
-    % will be interpolated into cartesian before projection.
-    
     
     mMicrographBinaryVesicles = createBinaryVesicleMicrograph(size(mMicrograph), vVesicleCntX, vVesicleCntY, vVesicleR, stVesicleModel.stParameters.dBetaBGWin);
     mMicrographBinaryVesicles(:) = ~mMicrographBinaryVesicles(:);
     
     % Cartesian coordinates
 
-    [Xabs, Yabs, mVesicleImWinStackInterp] = createVesInterpAbsoluteMeshGridsForMic('CAR', vVesicleCntX, vVesicleCntY, vVesicleR, stVesicleModel.stParameters, mMicrographBinaryVesicles);
+    [Xabs, Yabs] = createVesInterpAbsoluteMeshGridsForMic('CAR', vVesicleCntX, vVesicleCntY, vVesicleR, stVesicleModel.stParameters, mMicrographBinaryVesicles);
     
     % For interpolating polar coordinates (iVesShapeInterpMethod == 3)
     if stVesicleModel.stParameters.iVesShapeInterpMethod == 2
@@ -64,13 +47,22 @@ function removeVesiclesFromMicrograph(stVesicleModel, iPrincCompReg, iPrincCompR
             
 
                 
-                mImBoxSub = removeVesicleFromImage(stVesicleModel, iPrincCompReg,mImagePixelsInMicrograph(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsVesicleHardWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsBGWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImagePixelsInMicrographNorm(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2), vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),mImNormInterp, mVesicleImWinStackInterp(:,:,vesIdx), mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, vVesicleR(vesIdx), dImageMean, dStd);
+                mImBoxSub = removeVesicleFromImage(stVesicleModel,... 
+                    iPrincCompReg,...
+                    mImagePixelsInMicrograph(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),...
+                    mImagePixelsVesicleWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),...
+                    mImagePixelsVesicleHardWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),...
+                    mImagePixelsBGWin(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),...
+                    mImagePixelsInMicrographNorm(vImagePixelsCropInfo(1):vImagePixelsCropInfo(2),vImagePixelsCropInfo(3):vImagePixelsCropInfo(4)),...
+                    mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, vVesicleR(vesIdx), dImageMean, dStd); 
+                    
                 
-                if bShowFigure && sum(ismember(stVesicleModel.stParameters.showFigIdx, vesIdx)) 
-        
-                    fprintf( 'std %d \n', std(mImBoxSub(:))); % TODO remove
                 
-                end
+%                 if bShowFigure && sum(ismember(stVesicleModel.stParameters.showFigIdx, vesIdx)) 
+%         
+%                     fprintf( 'std %d \n', std(mImBoxSub(:))); % TODO remove
+%                 
+%                 end
                 
                 
                 if isValidVesicleImage(mImBoxSub)

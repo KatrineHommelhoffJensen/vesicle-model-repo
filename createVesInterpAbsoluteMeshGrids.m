@@ -22,9 +22,7 @@ function [Xabs, Yabs] = createVesInterpAbsoluteMeshGrids(dToVesRadius, mToVesR, 
         
         RMidMax = dToVesRadius;
         RInMax = RMidMax - dWallThickness/2;
-        %ROutMax = RMidMax + dWallThickness/2;
         vFromVesRIn = vFromVesR - dWallThickness/2;
-        %vFromVesROut = vFromVesR + dWallThickness/2;
              
         % 1) pixels inside wall
         rPixInterval1 = (RMidMax/RInMax)*mToVesR(:).*vFromVesRIn;

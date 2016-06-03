@@ -1,48 +1,15 @@
-
-% Projects the image mIm onto the residual subspace of the model: The
-% resulting mImProj wil have the vesicle structure removed. It is assumed
-% that the image is intensity normalised. Then the procedure takes care of:
+% PROJECTIMAGEONMODEL Projects the image mIm onto the residual subspace of
+% the model: The resulting mImProj wil have the vesicle structure removed.
+% It is assumed that the image is intensity normalised. Then the procedure
+% takes care of: 
 % 1) If the model and image are different in scaling, then shape normalise
 % the model to fit the image
 % 2) Subtract the model mean from mIm
 % 3) For each model component, subtract the model projection from mIm
 % 4) Clean up the images
 
-function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] = projectImageOnModel(stVesicleModel, iPrincCompReg, mVesImage, mVesImageInterpPOLWindowed, bResizeModel, mVesXrelR, mVesYrelA, dVesRadius, bReturnSignalLevels, bReturnModelMean, varargin)
-  
-    mImBoxSubLevels = [];
-    vSignalLevels = [];
-    vMedians = [];
-    mModelMeanImage = [];
-    
-    if nargin < 9
-        bReturnSignalLevels = 0;
-    end
-    
-    if nargin < 10
-        bReturnModelMean = 0;
-    end
-    
-    if bReturnSignalLevels && nargin > 10
-        
-        if length(varargin) < 8
-            error('Missing parameters');
-        end
-            
-        mImBoxNorm = varargin{1};
-        mImBox = varargin{2};
-        mImWin = varargin{3};
-        mImBGWin = varargin{4};
-        mImHardWin = varargin{5};
-        mImHardBGWin = varargin{6};
-        dImageMean = varargin{7};
-        dStd = varargin{8};
-        
-        mImBoxSubLevels = zeros(size(mImBoxNorm, 1), size(mImBoxNorm, 2), iPrincCompReg+1);
-        vSignalLevels = zeros(iPrincCompReg+1, 1);
-        vMedians = zeros(iPrincCompReg+1, 1);
+function [mVesImage] = projectImageOnModel(stVesicleModel, iPrincCompReg, mVesImage, mVesImageInterpPOLWindowed, bResizeModel, mVesXrelR, mVesYrelA, dVesRadius)  
 
-    end
     
     imHOSVDmean = stVesicleModel.mImHOSVDmeanCAR;
     if iPrincCompReg < 1
@@ -56,14 +23,6 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
     
     if stVesicleModel.stParameters.iVesShapeInterpMethod == 2
         
-        % New strategy: Rotationally align model to vesicle image:
-        % 1) Get intensity and shape normalized vesicle image in the
-        % polar coordinates
-        % 2) Rotationally align model mean to vesicle image
-        % 3) Convert the modified model mean and components to cartesian
-        % coordinates
-        % 4) resizeInterpolateVesicleImage modified model mean and
-        % components in the cartesian coordinates
              
         mImTrainMeanShiftAligned = stVesicleModel.mImHOSVDmeanTrainSetPOL;
         mImHOSVDmeanPOLShiftedToVesIm = stVesicleModel.mImHOSVDmeanPOL;
@@ -120,36 +79,13 @@ function [mVesImage, mImBoxSubLevels, vSignalLevels, vMedians, mModelMeanImage] 
         mVesImage = mVesImage - imHOSVDmean;
     end
     
-    
-    if bReturnModelMean
-        mModelMeanImage = imHOSVDmean;
-    end
-    
-    if bReturnSignalLevels
-        % Noise level difference (in intensity normalized frame!)
-        mImTmp = (mVesImage.*mImWin) + (mImBoxNorm.*mImBGWin);
-        vSignalLevels(1) = getVesicleImageWinDeviation(mImTmp, mImHardWin, mImHardBGWin);
-        vMedians(1) = getVesicleImageWinMedian(mVesImage, mImHardWin, 1);
-        mImBoxSubLevels(:,:,1) = (reverseNormalizeVesicleImage(mVesImage, dImageMean, dStd).*mImWin) +  (mImBox.*mImBGWin);
-    end
-    
-    
-    
+       
     % Subtract model projection
     if iPrincCompReg > 0
         for j=1:iPrincCompReg
 
             mVesImage = mVesImage - projectImageOnModelComponent(mVesImage, mComponents{j});
 
-            if bReturnSignalLevels
-                % Noise level difference (in intensity normalized frame!)
-                mImTmp = (mVesImage.*mImWin) + (mImBoxNorm.*mImBGWin);
-                vSignalLevels(j+1) = getVesicleImageWinDeviation(mImTmp, mImHardWin, mImHardBGWin);
-                vMedians(j+1) = getVesicleImageWinMedian(mVesImage, mImHardWin, 1);
-                % Intensity normalized values, visualized with reverse normalized,
-                % signal merged images
-                mImBoxSubLevels(:,:,j+1) = (reverseNormalizeVesicleImage(mVesImage, dImageMean, dStd).*mImWin) +  (mImBox.*mImBGWin);
-            end
         end
     end
     

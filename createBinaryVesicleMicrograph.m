@@ -18,9 +18,6 @@ function [mBinaryVesicleMicrograph] = createBinaryVesicleMicrograph(iMicDim, dVe
         yMin = max(floor(y - r), 1);
         yMax = min(ceil(y + r), iMicDim(2));
         
-        
-        % Notice: following Fred's conventions for vesicle center coord
-        % Notice also: only transfer true pixels
         im = getVesiclePixelsInImage([length(yMin:yMax), length(xMin:xMax)], y-yMin+1, x-xMin+1, r);
         for i=1:size(im,1)
             for j=1:size(im,2)

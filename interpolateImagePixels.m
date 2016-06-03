@@ -1,7 +1,6 @@
-
-% Interpolates pixel values from image mImOrig to image mImInterpStack
-% according to the absolute meshgrids mInterpX and mInterpY. 
-% Used for both micrographs and vesicle images.
+% INTERPOLATEIMAGEPIXELS Interpolates pixel values from image mImOrig to
+% image mImInterpStack according to the absolute meshgrids mInterpX and
+% mInterpY.  
 
 function [mImInterpStack] = interpolateImagePixels(mImOrig, mInterpX, mInterpY)
 

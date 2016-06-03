@@ -1,8 +1,6 @@
-
-% Handles subtraction of a vesicle structure from an image, including
-% projecting onto the model components and merging the vesicle and
+% REMOVEVESICLEFROMIMAGE Handles removal of a vesicle structure from an
+% image, including projecting onto the model components and merging the vesicle and
 % background signal
-
 
 % stVesicleModel: The model to be used for subtraction
 % mPrincCompReg, mComponents: Model components
@@ -18,8 +16,7 @@
 
 
 
-function [mImBoxSub] = removeVesicleFromImage(stVesicleModel, iPrincCompReg, mImBox, mImWin, mImHardWin, mImHardBGWin, mImBoxNorm, mImNormInterp, mImNormInterpWin, mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, dVesRadius, dImageMean, dStd)
-    
+function [mImBoxSub] = removeVesicleFromImage(stVesicleModel, iPrincCompReg, mImBox, mImWin, mImHardWin, mImHardBGWin, mImBoxNorm, mImNormInterpPOLWindowed, mVesXrelR, mVesYrelA, dVesRadius, dImageMean, dStd)
     if ~isValidVesicleImage(mImBoxNorm) 
         error('Invalid vesicle image');
     end
@@ -30,7 +27,7 @@ function [mImBoxSub] = removeVesicleFromImage(stVesicleModel, iPrincCompReg, mIm
     mImBGWin = abs(mImWin - 1);
     
     
-    mImBoxSub = projectImageOnModel(stVesicleModel, iPrincCompReg, (mImBoxNorm.*mImWin), mImNormInterpPOLWindowed, 1, mVesXrelR, mVesYrelA, dVesRadius, 1, 1, mImBoxNorm, mImBox, mImWin, mImBGWin, mImHardWin, mImHardBGWin, dImageMean, dStd);
+    mImBoxSub = projectImageOnModel(stVesicleModel, iPrincCompReg, (mImBoxNorm.*mImWin), mImNormInterpPOLWindowed, 1, mVesXrelR, mVesYrelA, dVesRadius);
     
 
     mImBoxSub = reverseNormalizeVesicleImage(mImBoxSub, dImageMean, dStd);

@@ -1,20 +1,7 @@
 
-% Extract stack of vesicle images from micrograph
-% sProfileType: Decides vesicle profile (2D, 1DA, 1DR, 1DAR)
-% vVesicleR, vVesicleCntX, vVesicleCntY: vesicle positions in micrograph
-% bNormalize: Should images be normalized (1/0)
-% bWindow: Should images be windowed (1/0)
-
-
 function [Xabs, Yabs, mVesicleImWinStackInterp, mVesicleImBGWinStackInterp, Rabs] = createVesInterpAbsoluteMeshGridsForMic(sProfileType, vVesicleCntX, vVesicleCntY, vVesicleR, stParameters, mMicrographBinaryVesicles)
     iNrOfVesicles = length(vVesicleR);
 
-    
-    % Notice: We will never need mVesicleImBGWinStackInterp - i.e.
-    % background windows in interpolated form, as this structure is only
-    % used for normalizing raw images. In this case it is only used for
-    % illustration (CAR)
-    
     mVesicleImBGWinStackInterp = [];
     Rabs = [];
     
@@ -32,19 +19,6 @@ function [Xabs, Yabs, mVesicleImWinStackInterp, mVesicleImBGWinStackInterp, Rabs
         % 1) Produce signal windows for both interpolated and raw images
         % ---------------------------------------------------------------
         
-        % How to produce a stack of Tukey windows, all of similar diameter
-        % but with different steepness (depending of how much the vesicle
-        % image was scaled)
-        % 0) Stack of centered, small radius-exact circles on black
-        %       (vVesicleR(IDX(:))>R(:).*vVesicleR(IDX(:)))
-        % 1) Stack of centered, white circles on black (window): 
-        %       (dBeta.*vVesicleR(IDX(:))>R(:).*vVesicleR(IDX(:)))
-        % 2) Stack of white rings (width = space from circles above towards
-        % image boundary, width defined by alpha) on black:
-        %       (dBeta.*vVesicleR(IDX(:))<=R(:).*vVesicleR(IDX(:)) & -dBeta.*vVesicleR(IDX(:))+R(:).*vVesicleR(IDX(:))<1/dAlpha); 
-        % 3) Stack of black/withe cosine surface from center, different
-        % from each image:
-        %       (0.5*(cos(2*pi*(0.5*dAlpha)*(R(:).*vVesicleR(IDX(:))-dBeta.*vVesicleR(IDX(:))))+1))
         mVesicleImWinStackInterp = reshape((stParameters.dBeta.*vVesicleR(IDX(:))>XrelR(:).*vVesicleR(IDX(:)))+(stParameters.dBeta.*vVesicleR(IDX(:))<=XrelR(:).*vVesicleR(IDX(:)) & -stParameters.dBeta.*vVesicleR(IDX(:))+XrelR(:).*vVesicleR(IDX(:))<1/stParameters.dAlpha).*(0.5*(cos(2*pi*(0.5*stParameters.dAlpha)*(XrelR(:).*vVesicleR(IDX(:))-stParameters.dBeta.*vVesicleR(IDX(:))))+1)),size(IDX));
         
         % ---------------------------------------------------------------
@@ -54,11 +28,8 @@ function [Xabs, Yabs, mVesicleImWinStackInterp, mVesicleImBGWinStackInterp, Rabs
         
         mVesicleImBGWinStackInterp = interpolateImagePixels(mMicrographBinaryVesicles, Xabs, Yabs);
 
-        % Return to binary values after interpolation
         mVesicleImBGWinStackInterp(mVesicleImBGWinStackInterp(:) >= 0.5) = 1;
         mVesicleImBGWinStackInterp(mVesicleImBGWinStackInterp(:) < 0.5) = 0;
-        % Smooth centered window
-        
         
         
     elseif strcmp(sProfileType, 'POL')

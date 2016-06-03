@@ -1,3 +1,6 @@
+%DISTPOINTPOINT Function that calculates the Euclidean distance between two
+%points 
+
 function dist = distPointPoint(pt1, pt2)
 
     dist = 0;
